@@ -84,7 +84,11 @@ const updateProfile=async(req,res)=>{
         await userModel.findByIdAndUpdate(userId,{name,phone,address:JSON.parse(address),dob,gender})
         if(imageFile){
             //upload image to cloudinary
-            const imageUpload = await cloudinary.uploader.upload(imageFile.path,{resource_type:'image'})
+            const imageUpload = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_stream({ resource_type: "image" }, (error, result) => {
+                    if (error) reject(error); else resolve(result);
+                }).end(imageFile.buffer);
+            });
             const imageURL=imageUpload.secure_url
             await userModel.findByIdAndUpdate(userId,{image:imageURL})
         }
